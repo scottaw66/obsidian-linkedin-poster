@@ -24,7 +24,7 @@ An Obsidian plugin that lets you compose and publish LinkedIn posts directly fro
 ### Build from Source
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/obsidian-linkedin-poster.git
+git clone https://github.com/scottaw66/obsidian-linkedin-poster.git
 cd obsidian-linkedin-poster
 bun install    # or npm install
 bun run build  # or npm run build
@@ -46,7 +46,7 @@ Then copy `main.js`, `manifest.json`, and `styles.css` to your vault's `.obsidia
 
 1. In Obsidian, go to **Settings → LinkedIn Poster**
 2. Enter your **Client ID** and **Client Secret** from the LinkedIn Developer Portal
-3. Set your **Post folder** — where new LinkedIn post notes will be created
+3. Set your **Drafts folder** and **Published folder** (can be the same folder or separate — see Settings below)
 4. Click **Connect LinkedIn Account** — a browser window will open for you to authorize
 5. Once authorized, you'll see "Connected as [your name]" in settings
 
@@ -57,7 +57,7 @@ Then copy `main.js`, `manifest.json`, and `styles.css` to your vault's `.obsidia
 1. Open the command palette (`Cmd/Ctrl + P`)
 2. Run **"New LinkedIn Post"**
 3. Enter a URL to share (or leave empty for a text-only post)
-4. A new note is created in your post folder with pre-filled frontmatter
+4. A new note is created in your drafts folder with pre-filled frontmatter
 5. Write your commentary in the note body
 
 ### Publishing
@@ -66,7 +66,7 @@ Then copy `main.js`, `manifest.json`, and `styles.css` to your vault's `.obsidia
 2. Run **"Post to LinkedIn"**
 3. Review the preview (if enabled) — shows processed text, character count, and visibility
 4. Click **"Post to LinkedIn"** in the preview modal
-5. The note's frontmatter is updated with the post date and LinkedIn URL
+5. The note's frontmatter is updated with the post date and LinkedIn URL, and the note is moved to your published folder
 
 ### Note Format
 
@@ -104,7 +104,8 @@ linkedin_url: https://www.linkedin.com/feed/update/urn:li:share:7012345678901234
 |---------|---------|-------------|
 | **Client ID** | — | LinkedIn app Client ID from the Developer Portal |
 | **Client Secret** | — | LinkedIn app Client Secret from the Developer Portal |
-| **Post folder** | — | Vault folder where new post notes are created |
+| **Drafts folder** | — | Folder where new post notes are created |
+| **Published folder** | — | Folder where posts are moved after publishing. Can be the same as drafts folder if you don't want separation. |
 | **Default tag** | `life/career/linkedin/posts` | Tag applied to new post notes in frontmatter |
 | **Default visibility** | `public` | `public` or `connections` — can be overridden per-post in frontmatter |
 | **Show preview before posting** | On | Display a preview modal with the processed text before publishing |

@@ -4,7 +4,8 @@ import type LinkedInPosterPlugin from "./main";
 export interface LinkedInPosterSettings {
   clientId: string;
   clientSecret: string;
-  postFolder: string;
+  draftsFolder: string;
+  publishedFolder: string;
   defaultTag: string;
   defaultVisibility: "public" | "connections";
   showPreview: boolean;
@@ -14,7 +15,8 @@ export interface LinkedInPosterSettings {
 export const DEFAULT_SETTINGS: LinkedInPosterSettings = {
   clientId: "",
   clientSecret: "",
-  postFolder: "",
+  draftsFolder: "",
+  publishedFolder: "",
   defaultTag: "life/career/linkedin/posts",
   defaultVisibility: "public",
   showPreview: true,
@@ -110,15 +112,33 @@ export class LinkedInPosterSettingTab extends PluginSettingTab {
     // --- Post Defaults ---
     containerEl.createEl("h3", { text: "Post Defaults" });
 
+    containerEl.createEl("p", {
+      text: "Drafts and Published can point to the same folder if you don't want separation, or use different folders to organize drafts vs. published posts.",
+      cls: "setting-item-description",
+    });
+
     new Setting(containerEl)
-      .setName("Post folder")
+      .setName("Drafts folder")
       .setDesc("Folder where new LinkedIn post notes are created")
       .addText((text) =>
         text
-          .setPlaceholder("e.g. LinkedIn Posts")
-          .setValue(this.plugin.settings.postFolder)
+          .setPlaceholder("e.g. Writing/LinkedIn/Drafts")
+          .setValue(this.plugin.settings.draftsFolder)
           .onChange(async (value) => {
-            this.plugin.settings.postFolder = value;
+            this.plugin.settings.draftsFolder = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Published folder")
+      .setDesc("Folder where posts are moved after publishing")
+      .addText((text) =>
+        text
+          .setPlaceholder("e.g. Writing/LinkedIn/Published")
+          .setValue(this.plugin.settings.publishedFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.publishedFolder = value;
             await this.plugin.saveSettings();
           })
       );

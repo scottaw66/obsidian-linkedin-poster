@@ -1,4 +1,4 @@
-import { App, MarkdownView, Modal, Notice, Setting, TFile } from "obsidian";
+import { App, MarkdownView, Modal, Notice, Setting, TFile, normalizePath } from "obsidian";
 import { markdownToLinkedIn } from "../utils/markdown";
 import type { LinkedInApi } from "../linkedin/api";
 
@@ -163,7 +163,8 @@ export async function publishPost(
   api: LinkedInApi,
   accessToken: string,
   personUrn: string,
-  postData: PostData
+  postData: PostData,
+  publishedFolder?: string
 ): Promise<void> {
   const processedText = markdownToLinkedIn(postData.body);
 
@@ -194,6 +195,20 @@ export async function publishPost(
       frontmatter.linkedin_url = `https://www.linkedin.com/feed/update/${result.postUrn}`;
     }
   });
+
+  // Move to published folder if different from current location
+  if (publishedFolder) {
+    const publishedPath = normalizePath(publishedFolder);
+    const currentFolder = postData.file.parent?.path || "";
+    if (publishedPath !== currentFolder) {
+      // Ensure published folder exists
+      if (!app.vault.getAbstractFileByPath(publishedPath)) {
+        await app.vault.createFolder(publishedPath);
+      }
+      const newPath = normalizePath(`${publishedPath}/${postData.file.name}`);
+      await app.fileManager.renameFile(postData.file, newPath);
+    }
+  }
 
   new Notice("Posted to LinkedIn!");
 }

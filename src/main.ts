@@ -60,7 +60,7 @@ export default class LinkedInPosterPlugin extends Plugin {
           await createLinkedInPost(
             this.app,
             url,
-            this.settings.postFolder,
+            this.settings.draftsFolder,
             this.settings.defaultTag,
             this.settings.defaultVisibility
           );
@@ -220,7 +220,8 @@ export default class LinkedInPosterPlugin extends Plugin {
             this.api,
             accessToken,
             this.tokenData!.personUrn,
-            postData
+            postData,
+            this.settings.publishedFolder
           );
         }
       ).open();
@@ -231,7 +232,8 @@ export default class LinkedInPosterPlugin extends Plugin {
           this.api,
           accessToken,
           this.tokenData!.personUrn,
-          postData
+          postData,
+          this.settings.publishedFolder
         );
       } catch (err) {
         new Notice(

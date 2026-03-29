@@ -50,17 +50,17 @@ export class UrlInputModal extends Modal {
 export async function createLinkedInPost(
   app: App,
   url: string,
-  postFolder: string,
+  draftsFolder: string,
   defaultTag: string,
   defaultVisibility: string
 ): Promise<void> {
-  if (!postFolder) {
-    new Notice("Please configure a post folder in LinkedIn Poster settings.");
+  if (!draftsFolder) {
+    new Notice("Please configure a drafts folder in LinkedIn Poster settings.");
     return;
   }
 
   // Ensure folder exists
-  const folderPath = normalizePath(postFolder);
+  const folderPath = normalizePath(draftsFolder);
   const folder = app.vault.getAbstractFileByPath(folderPath);
   if (!folder) {
     await app.vault.createFolder(folderPath);
