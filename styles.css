@@ -1,0 +1,28 @@
+/* LinkedIn Poster plugin styles */
+
+.linkedin-preview-url,
+.linkedin-preview-meta {
+  margin-bottom: 8px;
+}
+
+.linkedin-preview-text {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.linkedin-preview-text pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: var(--font-text-size);
+}
+
+.linkedin-preview-over-limit {
+  color: var(--text-error);
+  font-weight: bold;
+}

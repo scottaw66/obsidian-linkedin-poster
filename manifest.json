@@ -1,0 +1,9 @@
+{
+  "id": "linkedin-poster",
+  "name": "LinkedIn Poster",
+  "version": "1.0.0",
+  "minAppVersion": "1.11.4",
+  "description": "Compose and publish LinkedIn posts directly from Obsidian notes.",
+  "author": "Scott",
+  "isDesktopOnly": true
+}
