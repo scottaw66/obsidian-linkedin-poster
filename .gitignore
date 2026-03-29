@@ -1,5 +1,29 @@
+# Dependencies
 node_modules/
+
+# Build output
 main.js
 *.js.map
-data.json
 dist/
+
+# Obsidian plugin data
+data.json
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Environment
+.env
+.env.*
