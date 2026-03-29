@@ -100,7 +100,7 @@ export function startOAuthFlow(
     }
   });
 
-  server.listen(0, "127.0.0.1", () => {
+  server.listen(48734, "127.0.0.1", () => {
     const port = (server!.address() as { port: number }).port;
     const redirectUri = `http://127.0.0.1:${port}/callback`;
     const authUrl =

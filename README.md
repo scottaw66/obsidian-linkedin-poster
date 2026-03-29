@@ -40,7 +40,7 @@ Then copy `main.js`, `manifest.json`, and `styles.css` to your vault's `.obsidia
 2. Go to [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps) and create a new app
 3. Associate the app with your Company Page
 4. Under **Products**, request access to **Community Management API**
-5. Under **Auth → OAuth 2.0 settings**, add this redirect URI: `http://127.0.0.1`
+5. Under **Auth → OAuth 2.0 settings**, add this redirect URI: `http://127.0.0.1:48734/callback`
 
 ### 2. Configure the Plugin
 
