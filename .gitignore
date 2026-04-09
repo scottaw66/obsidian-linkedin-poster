@@ -27,3 +27,6 @@ data.json
 # Environment
 .env
 .env.*
+
+# Claude Code
+.claude/
