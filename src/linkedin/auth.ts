@@ -14,9 +14,7 @@ export interface AuthCallbacks {
   onSuccess: (tokenData: LinkedInTokenData) => void;
   onError: (error: string) => void;
   httpRequest: HttpRequestFn;
-  getUserInfo: (
-    accessToken: string
-  ) => Promise<{ sub: string; name: string }>;
+  getUserInfo: (accessToken: string) => Promise<{ sub: string; name: string }>;
 }
 
 export function startOAuthFlow(
@@ -89,14 +87,14 @@ export function startOAuthFlow(
       cleanup();
       callbacks.onSuccess(tokenData);
     } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error("LinkedIn OAuth error:", err);
       res.writeHead(500, { "Content-Type": "text/html" });
       res.end(
-        "<html><body><h1>Error</h1><p>Failed to complete authorization. You can close this window.</p></body></html>"
+        `<html><body><h1>Error</h1><p>${errMsg}</p><p>You can close this window.</p></body></html>`
       );
       cleanup();
-      callbacks.onError(
-        `Token exchange failed: ${err instanceof Error ? err.message : String(err)}`
-      );
+      callbacks.onError(`Token exchange failed: ${errMsg}`);
     }
   });
 
@@ -152,7 +150,7 @@ async function exchangeCodeForTokens(
     expiresAt: now + data.expires_in * 1000,
     refreshExpiresAt:
       now + (data.refresh_token_expires_in || 31536000) * 1000,
-    personUrn: "", // filled in by caller after getUserInfo
+    personUrn: "",
   };
 }
 

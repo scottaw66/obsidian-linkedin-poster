@@ -32,20 +32,34 @@ export default class LinkedInPosterPlugin extends Plugin {
 
     // Create HTTP transport using Obsidian's requestUrl (bypasses CORS)
     this.httpRequest = async (options) => {
-      const response = await requestUrl({
-        url: options.url,
-        method: options.method,
-        headers: options.headers,
-        body: options.body,
-      });
-      return {
-        status: response.status,
-        headers: response.headers,
-        text:
-          typeof response.text === "string"
-            ? response.text
-            : JSON.stringify(response.json),
-      };
+      try {
+        const response = await requestUrl({
+          url: options.url,
+          method: options.method,
+          headers: options.headers,
+          body: options.body,
+          throw: false,
+        });
+        return {
+          status: response.status,
+          headers: response.headers,
+          text:
+            typeof response.text === "string"
+              ? response.text
+              : JSON.stringify(response.json),
+        };
+      } catch (err: unknown) {
+        const e = err as { status?: number; headers?: Record<string, string>; text?: string };
+        if (e.status) {
+          console.error("HTTP error:", e.status, e.text);
+          return {
+            status: e.status,
+            headers: e.headers || {},
+            text: e.text || String(err),
+          };
+        }
+        throw err;
+      }
     };
     this.api = new LinkedInApi(this.httpRequest);
 
@@ -118,11 +132,8 @@ export default class LinkedInPosterPlugin extends Plugin {
         this.tokenData = tokenData;
         await this.saveTokens();
 
-        // Cache display name
         try {
-          const userInfo = await this.api.getUserInfo(
-            tokenData.accessToken
-          );
+          const userInfo = await this.api.getUserInfo(tokenData.accessToken);
           this.settings.connectedName = userInfo.name;
           await this.saveSettings();
         } catch {

@@ -7,7 +7,7 @@ import type {
 } from "./types";
 
 const LINKEDIN_API_BASE = "https://api.linkedin.com";
-const LINKEDIN_VERSION = "202401";
+const LINKEDIN_VERSION = "202601";
 
 export type HttpRequestFn = (options: {
   url: string;
@@ -46,7 +46,7 @@ export class LinkedInApi {
     visibility: "PUBLIC" | "CONNECTIONS",
     articleUrl?: string
   ): Promise<LinkedInPostResult> {
-    const post: LinkedInPostRequest = {
+    const post = {
       author: personUrn,
       commentary,
       visibility,
@@ -57,16 +57,12 @@ export class LinkedInApi {
       },
       lifecycleState: "PUBLISHED",
       isReshareDisabledByAuthor: false,
+      ...(articleUrl
+        ? { content: { article: { source: articleUrl, title: articleUrl } } }
+        : {}),
     };
 
-    if (articleUrl) {
-      post.content = {
-        article: {
-          source: articleUrl,
-        },
-      };
-    }
-
+    // console.log("Posts API request:", JSON.stringify(post, null, 2));
     const response = await this.httpRequest({
       url: `${LINKEDIN_API_BASE}/rest/posts`,
       method: "POST",
@@ -94,6 +90,7 @@ export class LinkedInApi {
       };
     }
 
+    // console.error("LinkedIn API error:", response.status, response.text);
     return {
       success: false,
       error: `LinkedIn API error: HTTP ${response.status} — ${response.text}`,

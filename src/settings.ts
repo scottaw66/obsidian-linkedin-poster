@@ -4,6 +4,7 @@ import type LinkedInPosterPlugin from "./main";
 export interface LinkedInPosterSettings {
   clientId: string;
   clientSecret: string;
+  linkedInMemberId: string;
   draftsFolder: string;
   publishedFolder: string;
   defaultTag: string;
@@ -15,6 +16,7 @@ export interface LinkedInPosterSettings {
 export const DEFAULT_SETTINGS: LinkedInPosterSettings = {
   clientId: "",
   clientSecret: "",
+  linkedInMemberId: "",
   draftsFolder: "",
   publishedFolder: "",
   defaultTag: "life/career/linkedin/posts",
@@ -66,6 +68,23 @@ export class LinkedInPosterSettingTab extends PluginSettingTab {
           });
         text.inputEl.type = "password";
       });
+
+    new Setting(containerEl)
+      .setName("LinkedIn Member ID")
+      .setDesc(
+        "Your LinkedIn person ID. To find it: go to your LinkedIn profile, " +
+          "view page source (Cmd+Option+U), and search for " +
+          '"urn:li:fsd_profile:" — the alphanumeric string after it is your ID.'
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("e.g. aB1cD2eF3g")
+          .setValue(this.plugin.settings.linkedInMemberId)
+          .onChange(async (value) => {
+            this.plugin.settings.linkedInMemberId = value.trim();
+            await this.plugin.saveSettings();
+          })
+      );
 
     // --- Connection Status ---
     containerEl.createEl("h3", { text: "Connection" });

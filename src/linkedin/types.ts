@@ -20,6 +20,7 @@ export interface LinkedInPostRequest {
   content?: {
     article: {
       source: string;
+      title: string;
     };
   };
   lifecycleState: "PUBLISHED";

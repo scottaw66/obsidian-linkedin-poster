@@ -39,8 +39,13 @@ Then copy `main.js`, `manifest.json`, and `styles.css` to your vault's `.obsidia
 1. Create a [LinkedIn Company Page](https://www.linkedin.com/company/setup/new/) (required by LinkedIn for developer apps, even for personal use — it can be minimal)
 2. Go to [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps) and create a new app
 3. Associate the app with your Company Page
-4. Under **Products**, request access to **Community Management API**
+4. Under **Products**, add both:
+   - **Share on LinkedIn** (grants `w_member_social` — needed to create posts)
+   - **Sign In with LinkedIn using OpenID Connect** (grants `openid`, `profile` — needed to identify your account)
 5. Under **Auth → OAuth 2.0 settings**, add this redirect URI: `http://127.0.0.1:48734/callback`
+6. Verify on the **Auth** tab that all four scopes appear: `openid`, `profile`, `w_member_social`, `email`
+
+> **Important:** Both products are required. "Share on LinkedIn" alone does not provide a way to identify your account, and the plugin will fail to connect without "Sign In with LinkedIn using OpenID Connect."
 
 ### 2. Configure the Plugin
 
@@ -49,6 +54,18 @@ Then copy `main.js`, `manifest.json`, and `styles.css` to your vault's `.obsidia
 3. Set your **Drafts folder** and **Published folder** (can be the same folder or separate — see Settings below)
 4. Click **Connect LinkedIn Account** — a browser window will open for you to authorize
 5. Once authorized, you'll see "Connected as [your name]" in settings
+
+> **Troubleshooting auth:** If you add the Sign In product after your first connection attempt, LinkedIn may cache the old consent. Go to LinkedIn → **Settings → Data Privacy → Permitted Services**, remove the app, then reconnect from the plugin.
+
+### Finding Your LinkedIn Member ID (for debugging)
+
+The plugin discovers your identity automatically via OpenID Connect. If you ever need your numeric LinkedIn Member ID for debugging purposes, open your LinkedIn profile in a browser, open the developer console, and run:
+
+```js
+fetch('/voyager/api/me',{headers:{'csrf-token':document.cookie.match(/JSESSIONID="?([^";]+)/)?.[1]}}).then(r=>r.text()).then(t=>prompt('ID',t.match(/li:member:(\d+)/)?.[1]||'none'))
+```
+
+This will display your numeric member ID in a prompt dialog.
 
 ## Usage
 
