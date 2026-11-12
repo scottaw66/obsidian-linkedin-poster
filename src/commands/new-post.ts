@@ -50,14 +50,15 @@ export class UrlInputModal extends Modal {
 const MAX_NOTES = 8000;
 
 /**
- * Notes to write from, as an Obsidian comment at the top of the draft's body. A comment is visible
- * while editing and is never posted (publish-post.ts and markdownToLinkedIn strip comments). "%%"
- * inside the notes would end the comment early and let the rest be posted, so it is broken up.
+ * Notes to write from, as plain text at the top of the draft's body (Scott, 2026-11-12: "i just want
+ * them put in the body of the new note. that simple. *I* will edit them out"). They are ordinary
+ * body text: whatever is still there at publish time is posted, like anything else in the note.
+ * A first version the same day hid them in an Obsidian comment, which Reading view doesn't show,
+ * so the draft looked empty.
  */
 function notesBlock(notes: string): string {
-  const text = notes.trim().slice(0, MAX_NOTES).replace(/%%/g, "% %");
-  if (!text) return "";
-  return `%%\nNotes (this block is a comment: it is not posted)\n\n${text}\n%%\n\n`;
+  const text = notes.trim().slice(0, MAX_NOTES);
+  return text ? `${text}\n\n` : "";
 }
 
 export async function createLinkedInPost(

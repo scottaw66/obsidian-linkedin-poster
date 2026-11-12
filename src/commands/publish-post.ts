@@ -1,5 +1,5 @@
 import { App, MarkdownView, Modal, Notice, Setting, TFile, normalizePath } from "obsidian";
-import { markdownToLinkedIn, stripObsidianComments } from "../utils/markdown";
+import { markdownToLinkedIn } from "../utils/markdown";
 import type { LinkedInApi } from "../linkedin/api";
 
 const MAX_CHARS = 3000;
@@ -40,9 +40,7 @@ export function parseActiveNote(
   }
 
   const lines = content.split("\n");
-  // Without Obsidian comments (%% ... %%): a draft made from the linkedin-post link can start with a
-  // comment block of notes, which is for the writer and must never be posted or count as content.
-  const body = stripObsidianComments(lines.slice(frontmatterEnd + 1).join("\n")).trim();
+  const body = lines.slice(frontmatterEnd + 1).join("\n").trim();
 
   if (!body) {
     new Notice("Post body is empty. Write some content first.");

@@ -79,9 +79,7 @@ obsidian://linkedin-post?vault=<vault name>&url=<percent-encoded web address>
 
 Only `http://` and `https://` addresses are accepted. With no `url`, it makes a text-only draft.
 
-Add `&notes=<percent-encoded text>` to start the draft with notes to write from. They go at the top of the body inside an Obsidian comment (`%% … %%`), which you can see while editing and which is never posted.
-
-**Obsidian comments are never posted.** Anything between `%%` and `%%` in a post note is left out of the preview, the character count and the published post (since 2026-11-12). (Added 2026-11-12; Brain Control's LinkedIn Topics page uses it for its "New LinkedIn Post" button.)
+Add `&notes=<percent-encoded text>` to start the draft with notes to write from. They go at the top of the body as plain text. They are ordinary body text, so delete them before publishing: anything left in the note is posted. (Added 2026-11-12; Brain Control's LinkedIn Topics page uses it for its "New LinkedIn Post" button.)
 
 ### Creating a New Post
 
