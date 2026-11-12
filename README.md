@@ -69,6 +69,16 @@ This will display your numeric member ID in a prompt dialog.
 
 ## Usage
 
+### Starting a draft from another app
+
+Opening this link does what **New LinkedIn Post** does once you've entered a URL, without the dialog: it creates the draft note for that address in your drafts folder and opens it.
+
+```
+obsidian://linkedin-post?vault=<vault name>&url=<percent-encoded web address>
+```
+
+Only `http://` and `https://` addresses are accepted. With no `url`, it makes a text-only draft. (Added 2026-11-12; Brain Control's LinkedIn Topics page uses it for its "New LinkedIn Post" button.)
+
 ### Creating a New Post
 
 1. Open the command palette (`Cmd/Ctrl + P`)

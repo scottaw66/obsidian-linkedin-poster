@@ -82,6 +82,27 @@ export default class LinkedInPosterPlugin extends Plugin {
       },
     });
 
+    // Link: obsidian://linkedin-post?url=<web address>
+    // Does what New LinkedIn Post does once a URL is submitted, without the dialog: creates the
+    // draft note for that URL in the drafts folder and opens it. For other apps to start a draft
+    // (added 2026-11-12 for Brain Control's LinkedIn Topics page, whose "New LinkedIn Post" button
+    // opens this link). Anything that isn't an http(s) address is refused; no url gives a
+    // text-only draft, like leaving the dialog empty.
+    this.registerObsidianProtocolHandler("linkedin-post", async (params) => {
+      const url = (params.url ?? "").trim();
+      if (url && !/^https?:\/\//i.test(url)) {
+        new Notice("LinkedIn Poster: that link isn't a web address, so no draft was made.");
+        return;
+      }
+      await createLinkedInPost(
+        this.app,
+        url,
+        this.settings.draftsFolder,
+        this.settings.defaultTag,
+        this.settings.defaultVisibility
+      );
+    });
+
     // Command: Post to LinkedIn
     this.addCommand({
       id: "post-to-linkedin",
