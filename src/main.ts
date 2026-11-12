@@ -89,6 +89,7 @@ export default class LinkedInPosterPlugin extends Plugin {
     // opens this link). Anything that isn't an http(s) address is refused; no url gives a
     // text-only draft, like leaving the dialog empty. Optional notes=<text> goes at the top of the
     // draft's body as plain text, to write from; the writer edits it out before publishing.
+    // Optional title=<text> names the draft, instead of fetching the page for its title.
     this.registerObsidianProtocolHandler("linkedin-post", async (params) => {
       const url = (params.url ?? "").trim();
       if (url && !/^https?:\/\//i.test(url)) {
@@ -101,7 +102,8 @@ export default class LinkedInPosterPlugin extends Plugin {
         this.settings.draftsFolder,
         this.settings.defaultTag,
         this.settings.defaultVisibility,
-        params.notes ?? ""
+        params.notes ?? "",
+        params.title ?? ""
       );
     });
 

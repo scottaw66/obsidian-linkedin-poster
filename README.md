@@ -79,6 +79,8 @@ obsidian://linkedin-post?vault=<vault name>&url=<percent-encoded web address>
 
 Only `http://` and `https://` addresses are accepted. With no `url`, it makes a text-only draft.
 
+Add `&title=<percent-encoded text>` to name the draft (`<date> <title>.md`) without fetching the page for its title; some sites refuse that fetch, and the draft would otherwise be named "LinkedIn Post".
+
 Add `&notes=<percent-encoded text>` to start the draft with notes to write from. They go at the top of the body as plain text. They are ordinary body text, so delete them before publishing: anything left in the note is posted. (Added 2026-11-12; Brain Control's LinkedIn Topics page uses it for its "New LinkedIn Post" button.)
 
 ### Creating a New Post

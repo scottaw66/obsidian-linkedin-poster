@@ -67,7 +67,8 @@ export async function createLinkedInPost(
   draftsFolder: string,
   defaultTag: string,
   defaultVisibility: string,
-  notes = ""
+  notes = "",
+  givenTitle = ""
 ): Promise<void> {
   if (!draftsFolder) {
     new Notice("Please configure a drafts folder in LinkedIn Poster settings.");
@@ -83,8 +84,11 @@ export async function createLinkedInPost(
 
   // Determine filename
   const dateStr = new Date().toISOString().split("T")[0];
-  let title = "LinkedIn Post";
-  if (url) {
+  // A title handed in (the linkedin-post link's `title`) names the note as it is, and the page is
+  // not fetched: some sites refuse the fetch, which left drafts named "LinkedIn Post" (seen with a
+  // huntress.com article, 2026-11-12). Without one, the page's own title is fetched as before.
+  let title = sanitizeFilename(givenTitle) || "LinkedIn Post";
+  if (url && title === "LinkedIn Post") {
     const fetchedTitle = await fetchPageTitle(url);
     if (fetchedTitle && fetchedTitle !== "LinkedIn Post") {
       title = sanitizeFilename(fetchedTitle);
