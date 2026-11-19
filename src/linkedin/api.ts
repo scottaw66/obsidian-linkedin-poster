@@ -39,6 +39,10 @@ export class LinkedInApi {
     return JSON.parse(response.text);
   }
 
+  /**
+   * `commentary` must already be in LinkedIn's little text format (utils/little.ts): this sends it
+   * exactly as given.
+   */
   async createPost(
     accessToken: string,
     personUrn: string,
@@ -62,7 +66,6 @@ export class LinkedInApi {
         : {}),
     };
 
-    // console.log("Posts API request:", JSON.stringify(post, null, 2));
     const response = await this.httpRequest({
       url: `${LINKEDIN_API_BASE}/rest/posts`,
       method: "POST",
@@ -80,19 +83,20 @@ export class LinkedInApi {
         response.headers["x-restli-id"] ||
         response.headers["X-RestLi-Id"] ||
         undefined;
-      return { success: true, postUrn };
+      return { success: true, status: response.status, postUrn };
     }
 
     if (response.status === 429) {
       return {
         success: false,
+        status: response.status,
         error: "LinkedIn rate limit reached. Try again later.",
       };
     }
 
-    // console.error("LinkedIn API error:", response.status, response.text);
     return {
       success: false,
+      status: response.status,
       error: `LinkedIn API error: HTTP ${response.status} — ${response.text}`,
     };
   }

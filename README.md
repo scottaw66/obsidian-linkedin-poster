@@ -151,18 +151,36 @@ linkedin_url: https://www.linkedin.com/feed/update/urn:li:share:7012345678901234
 
 ## Markdown Conversion
 
-LinkedIn supports limited formatting. The plugin automatically converts your Markdown:
+LinkedIn posts have no formatting of their own. The plugin turns your Markdown into the plain text the post will show (this is what the preview displays):
 
 | Markdown | Result | Notes |
 |----------|--------|-------|
-| `**bold**` | **bold** | Kept as-is — LinkedIn supports this |
-| `*italic*` | *italic* | Kept as-is |
+| `**bold**` / `*italic*` | `**bold**` / `*italic*` | Shown as typed: LinkedIn has no bold or italic |
 | `- item` / `1. item` | Lists | Kept as-is |
 | `# Heading` | Heading | `#` prefix stripped, text kept |
-| `[text](url)` | text (url) | Link syntax converted to plain text |
-| `![alt](img)` | *(removed)* | Images removed entirely |
+| `[text](url)` | text (url) | Just `url` when the link text is the URL itself |
+| `[[Note]]` / `[[Note\|alias]]` | Note / alias | Wikilinks show as their text, as in Obsidian |
+| `![alt](img)` / `![[file]]` | *(removed)* | Images and embeds removed entirely |
 | `` `code` `` | code | Backticks stripped |
 | Code blocks | Plain text | Fences removed, content kept |
+| `#word` | #word | Stays a LinkedIn hashtag (not `C#`, `#1` or a `#` inside a URL) |
+| `@name` | @name | Plain text: the plugin doesn't make mentions |
+
+### LinkedIn's reserved characters
+
+LinkedIn reads a post's text in its ["little" text format](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/little-text-format), where `| { } @ [ ] ( ) < > # \ * _ ~` are markup and must each be escaped with a backslash to show as typed. Unescaped, LinkedIn still accepts the post but can cut it off: on 2026-11-19 a post appeared on LinkedIn ending right before its first `(`. The plugin now escapes all of them (hashtags are sent as LinkedIn's hashtag template), and before sending it reads the escaped text back by LinkedIn's grammar; if that doesn't give exactly the preview's text, nothing is posted. Quotes, apostrophes and emoji are not reserved and are sent unchanged.
+
+### Post log
+
+Every attempt to post adds one JSON line to `post-log.jsonl` in the plugin's folder (`<vault>/.obsidian/plugins/linkedin-poster/`): the note, the text the preview showed (`text`), the exact escaped `commentary` sent, LinkedIn's HTTP status, the post's URN, and any error. The same entry goes to Obsidian's developer console. The plugin can't read a post back from LinkedIn (that needs the `r_member_social` permission, which LinkedIn gives to approved partners only), so the log is the record of what was sent.
+
+## Tests
+
+```bash
+bun run test   # or npm test
+```
+
+Uses Node's built-in test runner (Node 23.6 or later runs the TypeScript tests directly); no test dependencies.
 
 ## Token Management
 

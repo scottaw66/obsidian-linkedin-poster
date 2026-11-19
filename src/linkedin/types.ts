@@ -44,6 +44,7 @@ export interface LinkedInTokenResponse {
 
 export interface LinkedInPostResult {
   success: boolean;
+  status?: number;
   postUrn?: string;
   error?: string;
 }

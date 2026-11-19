@@ -257,7 +257,8 @@ export default class LinkedInPosterPlugin extends Plugin {
             accessToken,
             this.tokenData!.personUrn,
             postData,
-            this.settings.publishedFolder
+            this.settings.publishedFolder,
+            this.postLogPath()
           );
         }
       ).open();
@@ -269,7 +270,8 @@ export default class LinkedInPosterPlugin extends Plugin {
           accessToken,
           this.tokenData!.personUrn,
           postData,
-          this.settings.publishedFolder
+          this.settings.publishedFolder,
+          this.postLogPath()
         );
       } catch (err) {
         new Notice(
@@ -277,6 +279,15 @@ export default class LinkedInPosterPlugin extends Plugin {
         );
       }
     }
+  }
+
+  /**
+   * Every attempt to post is logged here, one JSON line each: the text, the exact escaped
+   * commentary sent, LinkedIn's HTTP status and the post's URN (added 2026-11-19). It sits in the
+   * plugin's own folder, outside the notes, so it never shows up as a note.
+   */
+  private postLogPath(): string | undefined {
+    return this.manifest.dir ? `${this.manifest.dir}/post-log.jsonl` : undefined;
   }
 
   // --- Token Storage ---
