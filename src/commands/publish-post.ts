@@ -1,7 +1,7 @@
 import { App, MarkdownView, Modal, Notice, Setting, TFile, normalizePath } from "obsidian";
 import { markdownToLinkedIn } from "../utils/markdown";
 import { commentaryFor } from "../utils/little";
-import type { LinkedInApi } from "../linkedin/api";
+import { postUrnFromUrl, type LinkedInApi } from "../linkedin/api";
 
 const MAX_CHARS = 3000;
 
@@ -10,6 +10,8 @@ export interface PostData {
   url: string;
   visibility: "PUBLIC" | "CONNECTIONS";
   status: string;
+  /** The post's LinkedIn address, set once it has been posted; empty in drafts. */
+  linkedinUrl: string;
   file: TFile;
 }
 
@@ -22,8 +24,25 @@ export function parseActiveNote(
     new Notice("No active note open.");
     return null;
   }
+  // The editor's text, so unsaved edits are included.
+  return parseNote(app, view.file, view.editor.getValue(), defaultVisibility);
+}
 
-  const file = view.file;
+/** A post note that isn't open: its text as saved on disk. */
+export async function parseNoteFile(
+  app: App,
+  file: TFile,
+  defaultVisibility: string
+): Promise<PostData | null> {
+  return parseNote(app, file, await app.vault.read(file), defaultVisibility);
+}
+
+function parseNote(
+  app: App,
+  file: TFile,
+  content: string,
+  defaultVisibility: string
+): PostData | null {
   const cache = app.metadataCache.getFileCache(file);
   const frontmatter = cache?.frontmatter;
 
@@ -33,7 +52,6 @@ export function parseActiveNote(
   }
 
   // Get body text (everything after frontmatter)
-  const content = view.editor.getValue();
   const frontmatterEnd = cache?.frontmatterPosition?.end?.line;
   if (frontmatterEnd === undefined) {
     new Notice("Could not parse frontmatter.");
@@ -59,6 +77,7 @@ export function parseActiveNote(
     url: frontmatter.url || "",
     visibility,
     status: frontmatter.status || "draft",
+    linkedinUrl: frontmatter.linkedin_url || "",
     file,
   };
 }
@@ -67,17 +86,21 @@ export class PreviewModal extends Modal {
   private postData: PostData;
   private processedText: string;
   private onPost: () => Promise<void>;
+  private actionLabel: string;
 
+  /** actionLabel names the button: "Post to LinkedIn", or "Update on LinkedIn" for an edit. */
   constructor(
     app: App,
     postData: PostData,
     processedText: string,
-    onPost: () => Promise<void>
+    onPost: () => Promise<void>,
+    actionLabel = "Post to LinkedIn"
   ) {
     super(app);
     this.postData = postData;
     this.processedText = processedText;
     this.onPost = onPost;
+    this.actionLabel = actionLabel;
   }
 
   onOpen(): void {
@@ -134,19 +157,19 @@ export class PreviewModal extends Modal {
     if (charCount <= MAX_CHARS) {
       buttonRow.addButton((button) =>
         button
-          .setButtonText("Post to LinkedIn")
+          .setButtonText(this.actionLabel)
           .setCta()
           .onClick(async () => {
             button.setDisabled(true);
-            button.setButtonText("Posting...");
+            button.setButtonText("Sending...");
             try {
               await this.onPost();
               this.close();
             } catch (err) {
               button.setDisabled(false);
-              button.setButtonText("Post to LinkedIn");
+              button.setButtonText(this.actionLabel);
               new Notice(
-                `Failed to post: ${err instanceof Error ? err.message : String(err)}`
+                `Failed: ${err instanceof Error ? err.message : String(err)}`
               );
             }
           })
@@ -167,6 +190,8 @@ export class PreviewModal extends Modal {
  */
 interface PostLogEntry {
   time: string;
+  /** "post" for a new post, "update" for replacing an existing post's text. */
+  action: "post" | "update";
   note: string;
   visibility: string;
   articleUrl: string;
@@ -211,6 +236,7 @@ export async function publishPost(
 
   const entry: PostLogEntry = {
     time: new Date().toISOString(),
+    action: "post",
     note: postData.file.path,
     visibility: postData.visibility,
     articleUrl: postData.url,
@@ -273,4 +299,72 @@ export async function publishPost(
   }
 
   new Notice("Posted to LinkedIn!");
+}
+
+/**
+ * Replace the text of a note's post on LinkedIn with the note's current text, in place (added
+ * 2026-11-19 to repair the posts the unescaped text had cut off). The post keeps its date, likes
+ * and comments; LinkedIn marks it "Edited". The article link can't be changed this way; only the
+ * text. Logged like a new post, with action "update", and the note gets an updated_date.
+ */
+export async function updatePost(
+  app: App,
+  api: LinkedInApi,
+  accessToken: string,
+  postData: PostData,
+  logPath?: string
+): Promise<void> {
+  const postUrn = postUrnFromUrl(postData.linkedinUrl);
+  if (!postUrn) {
+    throw new Error("This note has no linkedin_url with a post URN, so there's nothing to update.");
+  }
+
+  const processedText = markdownToLinkedIn(postData.body);
+  if (processedText.length > MAX_CHARS) {
+    throw new Error(`Post is ${processedText.length} characters — max is ${MAX_CHARS}.`);
+  }
+
+  const entry: PostLogEntry = {
+    time: new Date().toISOString(),
+    action: "update",
+    note: postData.file.path,
+    visibility: postData.visibility,
+    articleUrl: postData.url,
+    text: processedText,
+    commentary: null,
+    httpStatus: null,
+    postUrn,
+    error: null,
+  };
+
+  let commentary: string;
+  try {
+    commentary = commentaryFor(processedText);
+  } catch (err) {
+    entry.error = err instanceof Error ? err.message : String(err);
+    await appendPostLog(app, logPath, entry);
+    throw err;
+  }
+  entry.commentary = commentary;
+
+  const result = await api.updatePostCommentary(accessToken, postUrn, commentary);
+  entry.httpStatus = result.status ?? null;
+  entry.error = result.success ? null : result.error || "Unknown error";
+  await appendPostLog(app, logPath, entry);
+
+  if (!result.success) {
+    // Observed 2026-11-19: an update answered HTTP 500, yet the post on LinkedIn had the new text.
+    // Setting the same text again is harmless, so say so rather than leave it looking failed.
+    const hint =
+      (result.status ?? 0) >= 500
+        ? " LinkedIn sometimes applies the edit anyway: check the post, and running Update again is safe."
+        : "";
+    throw new Error((result.error || "Unknown error") + hint);
+  }
+
+  await app.fileManager.processFrontMatter(postData.file, (frontmatter) => {
+    frontmatter.updated_date = new Date().toISOString();
+  });
+
+  new Notice("Updated the post on LinkedIn.");
 }

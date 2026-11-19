@@ -99,6 +99,12 @@ Add `&notes=<percent-encoded text>` to start the draft with notes to write from.
 4. Click **"Post to LinkedIn"** in the preview modal
 5. The note's frontmatter is updated with the post date and LinkedIn URL, and the note is moved to your published folder
 
+### Fixing a post after it's published
+
+Edit the note, then run **Update post on LinkedIn** with it open. After the same preview, the post's text on LinkedIn is replaced in place: it keeps its date, likes and comments, and LinkedIn marks it "Edited". Edits don't notify anyone or move the post back up the feed, according to third-party guides to LinkedIn post editing (checked 2026-11-19); LinkedIn's own docs don't say. Only the text changes; the article link stays as it was posted. The note gets an `updated_date`, and the update is logged like a post (see Post log). If LinkedIn answers with a server error (5xx), check the post: on 2026-11-19 one update answered HTTP 500 but had gone through. Running the update again is safe, since it sets the same text.
+
+From the developer console (or `obsidian eval`), `app.plugins.plugins["linkedin-poster"].updateNoteAtPath("<path to note>.md")` does the same without the preview.
+
 ### Note Format
 
 Notes are created with this structure:
@@ -129,6 +135,8 @@ linkedin_url: https://www.linkedin.com/feed/update/urn:li:share:7012345678901234
 ---
 ```
 
+**Update post on LinkedIn** adds `updated_date` (ISO 8601) each time it replaces the post's text.
+
 ## Settings
 
 | Setting | Default | Description |
@@ -147,6 +155,7 @@ linkedin_url: https://www.linkedin.com/feed/update/urn:li:share:7012345678901234
 |---------|-------------|
 | **New LinkedIn Post** | Create a new post note (prompts for optional URL) |
 | **Post to LinkedIn** | Publish the active note to LinkedIn |
+| **Update post on LinkedIn** | Replace an already-posted note's text on LinkedIn with the note's current text |
 | **Connect LinkedIn Account** | Start the OAuth authorization flow |
 
 ## Markdown Conversion
@@ -172,7 +181,7 @@ LinkedIn reads a post's text in its ["little" text format](https://learn.microso
 
 ### Post log
 
-Every attempt to post adds one JSON line to `post-log.jsonl` in the plugin's folder (`<vault>/.obsidian/plugins/linkedin-poster/`): the note, the text the preview showed (`text`), the exact escaped `commentary` sent, LinkedIn's HTTP status, the post's URN, and any error. The same entry goes to Obsidian's developer console. The plugin can't read a post back from LinkedIn (that needs the `r_member_social` permission, which LinkedIn gives to approved partners only), so the log is the record of what was sent.
+Every attempt to post or update adds one JSON line to `post-log.jsonl` in the plugin's folder (`<vault>/.obsidian/plugins/linkedin-poster/`): whether it was a `post` or an `update`, the note, the text the preview showed (`text`), the exact escaped `commentary` sent, LinkedIn's HTTP status, the post's URN, and any error. The same entry goes to Obsidian's developer console. The plugin can't read a post back from LinkedIn (that needs the `r_member_social` permission, which LinkedIn gives to approved partners only), so the log is the record of what was sent.
 
 ## Tests
 

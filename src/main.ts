@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin, requestUrl } from "obsidian";
+import { MarkdownView, Notice, Plugin, TFile, requestUrl } from "obsidian";
 import {
   DEFAULT_SETTINGS,
   LinkedInPosterSettingTab,
@@ -14,8 +14,11 @@ import type { LinkedInTokenData } from "./linkedin/types";
 import { UrlInputModal, createLinkedInPost } from "./commands/new-post";
 import {
   parseActiveNote,
+  parseNoteFile,
   PreviewModal,
   publishPost,
+  updatePost,
+  type PostData,
 } from "./commands/publish-post";
 import { markdownToLinkedIn } from "./utils/markdown";
 
@@ -117,6 +120,21 @@ export default class LinkedInPosterPlugin extends Plugin {
         if (!view) return false;
         if (checking) return true;
         this.handlePublish();
+        return true;
+      },
+    });
+
+    // Command: Update post on LinkedIn — replace an already-posted note's text on LinkedIn with the
+    // note's current text, in place (added 2026-11-19, to repair posts cut off by unescaped text).
+    this.addCommand({
+      id: "update-linkedin-post",
+      name: "Update post on LinkedIn",
+      checkCallback: (checking: boolean) => {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (!view) return false;
+        if (checking) return true;
+        const postData = parseActiveNote(this.app, this.settings.defaultVisibility);
+        if (postData) this.handleUpdate(postData, this.settings.showPreview);
         return true;
       },
     });
@@ -288,6 +306,57 @@ export default class LinkedInPosterPlugin extends Plugin {
    */
   private postLogPath(): string | undefined {
     return this.manifest.dir ? `${this.manifest.dir}/post-log.jsonl` : undefined;
+  }
+
+  // --- Update ---
+
+  /**
+   * Update a posted note's text on LinkedIn without opening it, e.g. from the developer console or
+   * `obsidian eval`: app.plugins.plugins["linkedin-poster"].updateNoteAtPath("Writing/…/note.md").
+   * Skips the preview; the post log records exactly what was sent.
+   */
+  async updateNoteAtPath(path: string): Promise<string> {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!(file instanceof TFile)) throw new Error(`No note at ${path}`);
+    const postData = await parseNoteFile(this.app, file, this.settings.defaultVisibility);
+    if (!postData) throw new Error(`Couldn't read the post in ${path}`);
+    await this.handleUpdate(postData, false, true);
+    return "updated";
+  }
+
+  private async handleUpdate(postData: PostData, withPreview: boolean, rethrow = false): Promise<void> {
+    if (postData.status !== "posted" || !postData.linkedinUrl) {
+      const message = "This note hasn't been posted yet, so there's nothing on LinkedIn to update.";
+      if (rethrow) throw new Error(message);
+      new Notice(message);
+      return;
+    }
+
+    const accessToken = await this.getValidAccessToken();
+    if (!accessToken) {
+      if (rethrow) throw new Error("Not connected to LinkedIn.");
+      return;
+    }
+
+    const send = () =>
+      updatePost(this.app, this.api, accessToken, postData, this.postLogPath());
+
+    if (withPreview) {
+      new PreviewModal(
+        this.app,
+        postData,
+        markdownToLinkedIn(postData.body),
+        send,
+        "Update on LinkedIn"
+      ).open();
+      return;
+    }
+    try {
+      await send();
+    } catch (err) {
+      if (rethrow) throw err;
+      new Notice(`Failed to update: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   // --- Token Storage ---
